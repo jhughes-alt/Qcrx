@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth" x-data="appData">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>QCRx | Stable Pilot Platform</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+  <style>
+    [x-cloak] { display: none !important; }
+    :focus-visible { outline: none; box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.5); }
+  </style>
+</head>
+<body class="min-h-screen bg-slate-50 font-sans antialiased dark:bg-slate-900 dark:text-slate-100"
+      x-data="{
+        page: 'login',
+        showModal: false,
+        showEnrollModal: false,
+        selectedPatient: null,
+        notification: '',
+        patientCount: 500,
+        deliveryFee: 10,
+        revenuePerPatient: 94.19,
+        baseCostsPerPatient: 40,
+        patients: [
+          { id: 101, name: 'Eleanor Vance', status: 'red', interaction: 18, doseHistory: 'Missed: Mon, Wed, Fri', currentSymptoms: 'Dizziness', meds: ['Eliquis 5mg', 'Lisinopril 10mg'], deliveryStatus: 'Hand-to-Hand Verified', credit: 25.00 },
+          { id: 102, name: 'Walter Hughes', status: 'yellow', interaction: 12, doseHistory: 'Missed: Sat', currentSymptoms: 'Nausea', meds: ['Atorvastatin 20mg'], deliveryStatus: 'Courier En Route', credit: 25.00 },
+          { id: 104, name: 'David Chen', status: 'red', interaction: 15, doseHistory: 'Missed: Last 48hrs', currentSymptoms: 'Confusion', meds: ['Warfarin 5mg', 'Amlodipine 5mg'], deliveryStatus: 'Hand-to-Hand Verified', credit: 25.00 }
+        ],
+        getStatusBadge(status) {
+          const colors = {
+            red: 'bg-red-100 text-red-800 dark:bg-red-900/40 dark:text-red-300',
+            yellow: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/40 dark:text-yellow-300',
+            green: 'bg-green-100 text-green-800 dark:bg-green-900/40 dark:text-green-300'
+          };
+          return colors[status] || 'bg-gray-100 text-gray-800';
+        },
+        showNotification(msg) {
+          this.notification = msg;
+          setTimeout(() => this.notification = '', 3000);
+        },
+        enrollPatient() {
+          const name = this.$refs.newName?.value?.trim();
+          if (!name) return this.showNotification('Please enter a patient name');
+          this.patients.push({
+            id: Math.floor(Math.random() * 1000) + 1000,
+            name,
+            status: 'green',
+            interaction: 2,
+            doseHistory: 'New Enrollment',
+            currentSymptoms: 'None',
+            meds: ['Syncing...'],
+            deliveryStatus: 'Pending',
+            credit: 25.00
+          });
+          this.showEnrollModal = false;
+          this.showNotification(`${name} added to Pilot Queue`);
+          this.$refs.newName.value = '';
+        }
+      }">
+
+  <!-- Notification Toast -->
+  <div x-show="notification" class="fixed top-4 right-4 z-50 bg-emerald-600 text-white px-6 py-4 rounded-2xl shadow-lg max-w-sm" x-transition>
+    <span x-text="notification"></span>
+  </div>
+
+  <!-- Login Page -->
+  <div x-show="page === 'login'" class="bg-slate-900 flex items-center justify-center min-h-screen">
+    <div class="bg-white dark:bg-slate-800 p-10 rounded-[40px] shadow-2xl w-full max-w-md border-b-8 border-blue-600">
+      <div class="bg-blue-600 text-white w-14 h-14 rounded-2xl flex items-center justify-center font-bold text-2xl mx-auto mb-4 shadow-lg">Q</div>
+      <h1 class="text-2xl font-black text-center text-slate-800 dark:text-white mb-1">QCRx Portal</h1>
+      <p class="text-slate-400 dark:text-slate-500 text-xs text-center mb-8 font-black uppercase tracking-widest">Pilot Env v2.6.1</p>
+      <div class="space-y-4">
+        <button @click="page = 'clinical'" class="w-full bg-slate-800 dark:bg-slate-700 text-white font-bold py-5 rounded-2xl hover:bg-blue-600 transition flex items-center justify-center shadow-md">
+          <span class="mr-2 text-xl">🩺</span> Clinical Oversight
+        </button>
+        <button @click="page = 'pharmacy'" class="w-full bg-emerald-600 text-white font-bold py-5 rounded-2xl hover:bg-emerald-700 transition flex items-center justify-center shadow-md">
+          <span class="mr-2 text-xl">💊</span> Pharmacy Logistics
+        </button>
+        <button @click="page = 'finance'" class="w-full bg-slate-100 dark:bg-slate-700 text-slate-800 dark:text-white font-bold py-5 rounded-2xl hover:bg-slate-200 dark:hover:bg-slate-600 transition border-2 border-slate-200 dark:border-slate-600 flex items-center justify-center">
+          <span class="mr-2 text-xl">📈</span> Financial Strategy
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Clinical View -->
+  <div x-show="page === 'clinical'" x-cloak class="min-h-screen bg-slate-50 dark:bg-slate-900">
+    <nav class="bg-slate-900 text-white p-4 flex justify-between items-center shadow-xl sticky top-0 z-40">
+      <span class="font-black text-xl tracking-tighter">QCRx <span class="text-blue-500">CLINICAL</span></span>
+      <button @click="page = 'login'" class="text-xs font-bold text-slate-400 border border-slate-700 px-3 py-1 rounded-lg hover:bg-slate-800">Log Out</button>
+    </nav>
+    <main class="max-w-6xl mx-auto p-6">
+      <h2 class="text-2xl font-black mb-6 text-slate-900 dark:text-white">Patient Intervention Queue</h2>
+      <div class="bg-white dark:bg-slate-800 rounded-[32px] shadow-sm border overflow-hidden overflow-x-auto">
+        <table class="w-full text-left min-w-[600px]">
+          <caption class="sr-only">Patient intervention queue with symptom logs and actions</caption>
+          <thead class="bg-slate-50 dark:bg-slate-700 text-xs font-black text-slate-400 dark:text-slate-300 uppercase tracking-widest">
+            <tr>
+              <th scope="col" class="p-6">Patient</th>
+              <th scope="col" class="p-6">Symptom Log</th>
+              <th scope="col" class="p-6">Logged Mins</th>
+              <th scope="col" class="p-6 text-right">Action</th>
+            </tr>
+          </thead>
+          <tbody class="text-sm divide-y dark:divide-slate-700">
+            <template x-for="p in patients" :key="p.id">
+              <tr class="hover:bg-slate-50 dark:hover:bg-slate-700/50 transition cursor-pointer" @click="selectedPatient = p; showModal = true" role="button">
+                <td class="p-6 font-bold text-slate-800 dark:text-slate-100" x-text="p.name"></td>
+                <td class="p-6">
+                  <span :class="p.status === 'red' ? 'text-red-600 dark:text-red-400 font-bold' : 'text-slate-500 dark:text-slate-400'" x-text="p.doseHistory"></span>
+                </td>
+                <td class="p-6 font-bold text-slate-700 dark:text-slate-300" x-text="p.interaction + 'm'"></td>
+                <td class="p-6 text-right">
+                  <button class="bg-blue-600 text-white font-bold px-4 py-2 rounded-xl text-xs hover:bg-blue-700">Open File</button>
+                </td>
+              </tr>
+            </template>
+          </tbody>
+        </table>
+      </div>
+    </main>
+  </div>
+
+  <!-- Pharmacy View -->
+  <div x-show="page === 'pharmacy'" x-cloak class="min-h-screen bg-slate-50 dark:bg-slate-900">
+    <nav class="bg-emerald-900 text-white p-4 flex justify-between items-center shadow-xl sticky top-0 z-40">
+      <span class="font-black text-xl tracking-tighter">QCRx <span class="text-emerald-400">PHARMACY</span></span>
+      <div class="flex space-x-2">
+        <button @click="showEnrollModal = true" class="bg-emerald-500 text-white font-black px-4 py-1.5 rounded-lg text-xs hover:bg-emerald-600">+ New Patient</button>
+        <button @click="page = 'login'" class="text-xs font-bold text-emerald-400 border border-emerald-700 px-3 py-1 rounded-lg hover:bg-emerald-800">Log Out</button>
+      </div>
+    </nav>
+    <main class="max-w-6xl mx-auto p-6">
+      <div class="bg-white dark:bg-slate-800 p-8 rounded-[40px] border shadow-sm flex justify-between items-center mb-8 border-l-8 border-emerald-500">
+        <div>
+          <p class="text-xs font-black text-slate-400 dark:text-slate-300 uppercase tracking-widest mb-1">Total Logistics Credits</p>
+          <p class="text-5xl font-black text-emerald-900 dark:text-emerald-200" x-text="'$' + (patients.length * 25).toLocaleString() + '.00'"></p>
+        </div>
+      </div>
+      <div class="bg-white dark:bg-slate-800 rounded-[32px] border shadow-sm overflow-hidden overflow-x-auto">
+        <table class="w-full text-left min-w-[500px]">
+          <thead class="bg-slate-50 dark:bg-slate-700 text-xs font-bold text-slate-400 dark:text-slate-300 uppercase border-b">
+            <tr>
+              <th class="p-6">Patient</th>
+              <th class="p-6">Fulfillment Tracking</th>
+              <th class="p-6 text-right">Credit</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y dark:divide-slate-700">
+            <template x-for="p in patients" :key="p.id">
+              <tr class="border-b">
+                <td class="p-6 font-bold text-slate-800 dark:text-slate-100" x-text="p.name"></td>
+                <td class="p-6 text-emerald-600 dark:text-emerald-400 font-bold text-xs uppercase" x-text="p.deliveryStatus"></td>
+                <td class="p-6 text-right font-black text-emerald-700 dark:text-emerald-300" x-text="'$' + p.credit.toFixed(2)"></td>
+              </tr>
+            </template>
+          </tbody>
+        </table>
+      </div>
+    </main>
+  </div>
+
+  <!-- Finance View -->
+  <div x-show="page === 'finance'" x-cloak class="min-h-screen bg-slate-50 dark:bg-slate-900">
+    <nav class="bg-slate-800 text-white p-4 flex justify-between items-center shadow-xl sticky top-0 z-40">
+      <span class="font-black text-xl">QCRx <span class="text-blue-300">STRATEGY</span></span>
+      <button @click="page = 'login'" class="text-xs opacity-70 hover:opacity-100">Logout</button>
+    </nav>
+    <main class="max-w-4xl mx-auto p-12">
+      <div class="bg-white dark:bg-slate-800 rounded-[60px] shadow-2xl border p-12">
+        <h2 class="text-4xl font-black mb-12 tracking-tight text-center text-slate-900 dark:text-white">Profit Engine</h2>
+        <div class="space-y-12">
+          <div>
+            <label class="flex justify-between font-black text-xs uppercase tracking-widest mb-4 text-slate-700 dark:text-slate-300">
+              Patient Pilot Scale: <span class="text-blue-600 dark:text-blue-400" x-text="patientCount"></span>
+            </label>
+            <input type="range" x-model.number="patientCount" min="10" max="1000" step="10" class="w-full h-3 bg-slate-200 dark:bg-slate-700 rounded-lg appearance-none cursor-pointer accent-blue-600">
+          </div>
+          <div>
+            <label class="flex justify-between font-black text-xs uppercase tracking-widest mb-4 text-slate-700 dark:text-slate-300">
+              Delivery Fee per Patient: <span class="text-emerald-600 dark:text-emerald-400" x-text="'$' + deliveryFee"></span>
+            </label>
+            <input type="range" x-model.number="deliveryFee" min="0" max="25" step="1" class="w-full h-3 bg-slate-200 dark:bg-slate-700 rounded-lg appearance-none cursor-pointer accent-emerald-500">
+          </div>
+          <div class="bg-slate-900 text-white p-12 rounded-[40px] text-center shadow-inner">
+            <p class="text-slate-400 text-xs font-black uppercase mb-3 tracking-widest">Projected Monthly Net Profit</p>
+            <p class="text-7xl font-black text-blue-400" x-text="'$' + ((patientCount * (revenuePerPatient + deliveryFee - baseCostsPerPatient)).toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2}))"></p>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <!-- Enroll Modal -->
+  <div x-show="showEnrollModal" class="fixed inset-0 bg-slate-900/95 backdrop-blur-md flex items-center justify-center p-4 z-50" x-cloak x-transition>
+    <div class="bg-white dark:bg-slate-800 rounded-[40px] max-w-md w-full p-10 shadow-2xl">
+      <h3 class="text-3xl font-black mb-8 tracking-tight text-slate-900 dark:text-white">New Enrollment</h3>
+      <div class="space-y-6">
+        <input type="text" x-ref="newName" placeholder="Patient Name" class="w-full bg-slate-50 dark:bg-slate-700 border-2 border-slate-100 dark:border-slate-600 rounded-2xl p-4 font-bold outline-none focus:border-blue-500">
+        <button @click="enrollPatient()" class="w-full bg-emerald-600 text-white font-black py-5 rounded-[24px] hover:bg-emerald-700">Start RTM Monitoring</button>
+        <button @click="showEnrollModal = false" class="w-full text-slate-400 dark:text-slate-500 text-xs font-bold hover:text-slate-600">Cancel</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Patient Detail Modal -->
+  <div x-show="showModal" class="fixed inset-0 bg-slate-900/90 backdrop-blur-md flex items-center justify-end z-50" x-cloak x-transition>
+    <div class="bg-white dark:bg-slate-800 h-full w-full max-w-2xl shadow-2xl flex flex-col p-12 overflow-y-auto">
+      <div class="flex justify-between mb-8 border-b pb-8 dark:border-slate-700">
+        <div>
+          <h3 class="text-4xl font-black text-slate-800 dark:text-white" x-text="selectedPatient?.name"></h3>
+          <p class="text-red-500 dark:text-red-400 font-bold uppercase text-xs mt-2">Clinical Narrative Log</p>
+        </div>
+        <button @click="showModal = false" class="text-slate-300 dark:text-slate-400 text-2xl hover:text-slate-500">&times;</button>
+      </div>
+      <div class="space-y-8 flex-grow">
+        <textarea rows="6" class="w-full bg-slate-50 dark:bg-slate-700 border-2 border-slate-100 dark:border-slate-600 rounded-[28px] p-6 text-sm font-medium outline-none focus:border-blue-500" placeholder="Document interaction..."></textarea>
+        <div class="grid grid-cols-2 gap-4">
+          <select class="w-full bg-slate-50 dark:bg-slate-700 border-2 border-slate-100 dark:border-slate-600 rounded-2xl p-4 text-sm font-black outline-none focus:border-blue-500">
+            <option>Re-educated</option>
+            <option>MD Notify</option>
+            <option>Escalated</option>
+          </select>
+          <input type="number" min="0" class="w-full bg-slate-50 dark:bg-slate-700 border-2 border-slate-100 dark:border-slate-600 rounded-2xl p-4 text-sm font-black text-blue-600 dark:text-blue-400 outline-none focus:border-blue-500" value="10" placeholder="Minutes">
+        </div>
+      </div>
+      <button @click="showModal = false; showNotification('Entry Logged Successfully')" class="mt-12 w-full bg-slate-900 dark:bg-slate-700 text-white font-black py-6 rounded-[32px] shadow-2xl hover:bg-slate-800">Lock Intervention</button>
+    </div>
+  </div>
+</body>
+</html>
